@@ -50,14 +50,14 @@ to spawn-numberOfThieves
     set size 1
     set shape "person"
     set heading random 360
-    set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self
-    ifelse elevation = 0
+;    set elevation gis:raster-sample elevation self
+;    set slope gis:raster-sample slope self
+;    set aspect gis:raster-sample aspect self
+    if elevation = 0
     [ die ]
-    [ set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self ]
+;    [ set elevation gis:raster-sample elevation self
+;    set slope gis:raster-sample slope self
+;    set aspect gis:raster-sample aspect self ]
     ]
 end
 
@@ -66,16 +66,16 @@ to spawn-numberOfPolice
     [ setxy random-xcor random-ycor
     set color blue
     set size 1
-    set shape "person"
+    set shape "default"
     set heading random 360
-    set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self
-    ifelse elevation = 0
+;    set elevation gis:raster-sample elevation self
+;    set slope gis:raster-sample slope self
+;    set aspect gis:raster-sample aspect self
+    if elevation = 0
     [ die ]
-    [ set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self ]
+;    [ set elevation gis:raster-sample elevation self
+;    set slope gis:raster-sample slope self
+;    set aspect gis:raster-sample aspect self ]
     ]
 end
 
@@ -103,12 +103,13 @@ to setup
 ; creating the agents
     spawn-numberOfThieves
     spawn-numberOfPolice
-    spawn-numberOfCivilians
+;    spawn-numberOfCivilians
 
     reset-ticks
 end
 
-to run
+to go
+    ; show cone of vision for the police
 
 end
 @#$#@#$#@
@@ -165,7 +166,7 @@ numberOfPolice
 numberOfPolice
 0
 100
-50.0
+9.0
 1
 1
 NIL
@@ -180,7 +181,7 @@ numberOfThieves
 numberOfThieves
 0
 100
-50.0
+20.0
 1
 1
 NIL
@@ -206,8 +207,8 @@ BUTTON
 31
 185
 64
-NIL
 run
+go
 T
 1
 T
