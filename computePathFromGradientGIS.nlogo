@@ -41,6 +41,11 @@ to load-GIS-map-with-gradients
     gis:paint elevation 0
 end
 
+to load-png-image-to-patches
+    clear-all
+    import-pcolors-rgb "testMap.png"
+end
+
 ; the agents cannot spawn in patches with grayscale value 0
 
 to spawn-numberOfThieves
@@ -61,6 +66,18 @@ to spawn-numberOfThieves
     ]
 end
 
+to spawn-numberOfThieves-png
+    create-thiefs numberOfThieves
+    [ setxy random-xcor random-ycor
+        set color red
+        set size 1
+        set shape "person"
+        set heading random 360
+        if pcolor = 0
+        [ die ]
+    ]
+end
+
 to spawn-numberOfPolice
     create-police numberOfPolice
     [ setxy random-xcor random-ycor
@@ -76,6 +93,18 @@ to spawn-numberOfPolice
 ;    [ set elevation gis:raster-sample elevation self
 ;    set slope gis:raster-sample slope self
 ;    set aspect gis:raster-sample aspect self ]
+    ]
+end
+
+to spawn-numberOfPolice-png
+    create-police numberOfPolice
+    [ setxy random-xcor random-ycor
+        set color blue
+        set size 1
+        set shape "default"
+        set heading random 360
+        if pcolor = 0
+        [ die ]
     ]
 end
 
@@ -99,28 +128,42 @@ end
 
 to setup
     clear-all
-    load-GIS-map-with-gradients
+;    load-GIS-map-with-gradients
+    load-png-image-to-patches
 ; creating the agents
-    spawn-numberOfThieves
-    spawn-numberOfPolice
+    spawn-numberOfThieves-png
+    spawn-numberOfPolice-png
 ;    spawn-numberOfCivilians
 
     reset-ticks
 end
 
 to go
+    ; reset the color of the patches
+    ask patches
+    [
+      if pcolor = red
+        [ set pcolor white ]
+    ]
     ; show cone of vision for the police
+  ask police
+  [ ask patches in-cone coneOfVisionRange coneOfVisionAngle
+    [ set pcolor red
+      ;if pcolor = white
+;        [set pcolor red]
+    ]
+  ]
 
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-647
-448
+220
+16
+1198
+995
 -1
 -1
-13.0
+4.83
 1
 10
 1
@@ -130,10 +173,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-100
+100
+-100
+100
 0
 0
 1
@@ -218,6 +261,36 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+20
+264
+198
+297
+coneOfVisionRange
+coneOfVisionRange
+0
+50
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+15
+309
+189
+342
+coneOfVisionAngle
+coneOfVisionAngle
+0
+300
+50.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
