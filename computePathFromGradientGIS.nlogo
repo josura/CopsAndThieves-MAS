@@ -44,6 +44,15 @@ end
 to load-png-image-to-patches
     clear-all
     import-pcolors-rgb "testMap.png"
+    ask patches
+    [ if pcolor = black
+      [set plabel-color 0]
+      if pcolor = [0 0 0]
+      [set plabel-color 0]
+      if pcolor != [255 255 255] and pcolor != [0 0 0]
+      [set plabel-color 9.9
+      set pcolor white]
+    ]
 end
 
 ; the agents cannot spawn in patches with grayscale value 0
@@ -73,7 +82,7 @@ to spawn-numberOfThieves-png
         set size 1
         set shape "person"
         set heading random 360
-        if pcolor = 0
+        if pcolor = [0 0 0]
         [ die ]
     ]
 end
@@ -103,7 +112,7 @@ to spawn-numberOfPolice-png
         set size 1
         set shape "default"
         set heading random 360
-        if pcolor = 0
+        if pcolor = [0 0 0]
         [ die ]
     ]
 end
@@ -125,6 +134,43 @@ to spawn-numberOfCivilians
     set aspect gis:raster-sample aspect self ]
     ]
 end
+
+to move-police
+    ask police
+    [ fd 1
+    ifelse elevation = 0
+    [ die ]
+    [ set elevation gis:raster-sample elevation self
+    set slope gis:raster-sample slope self
+    set aspect gis:raster-sample aspect self ]
+    ]
+end
+
+; police move in patches in a random direction, if a wall is present (values between 240 and 255) the police agent does not move
+to move-police-png
+    ask police
+    [ wiggle
+        if pcolor < 240
+        [ fd 1 ]
+    ]
+end
+
+to move-thiefs
+    ask thiefs
+    [ fd 1
+    ifelse elevation = 0
+    [ die ]
+    [ set elevation gis:raster-sample elevation self
+    set slope gis:raster-sample slope self
+    set aspect gis:raster-sample aspect self ]
+    ]
+end
+
+to wiggle
+  left random 90
+  right random 90
+end
+
 
 to setup
     clear-all
@@ -148,9 +194,8 @@ to go
     ; show cone of vision for the police
   ask police
   [ ask patches in-cone coneOfVisionRange coneOfVisionAngle
-    [ set pcolor red
-      ;if pcolor = white
-;        [set pcolor red]
+    [ if plabel-color = 9.9
+        [set pcolor red]
     ]
   ]
 
@@ -159,11 +204,11 @@ end
 GRAPHICS-WINDOW
 220
 16
-1198
-995
+1479
+1276
 -1
 -1
-4.83
+12.39
 1
 10
 1
@@ -173,10 +218,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--100
-100
--100
-100
+-50
+50
+-50
+50
 0
 0
 1
@@ -271,7 +316,7 @@ coneOfVisionRange
 coneOfVisionRange
 0
 50
-5.0
+11.0
 1
 1
 NIL
