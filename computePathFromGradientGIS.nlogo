@@ -288,9 +288,10 @@ to go
   move-civilians-png
   try-robbery
   ; compute the rate of change of the number of robbed civilians after a defined number of ticks, given as a parameter
-  if checkpoint-ticks - ticks >= ticks-difference
-  [compute-robbed-rate]
-
+  if ticks - checkpoint-ticks  >= ticks-difference
+  [
+    compute-robbed-rate
+]
   tick
 
 end
@@ -410,7 +411,7 @@ coneOfVisionRange
 coneOfVisionRange
 0
 50
-20.0
+13.0
 1
 1
 NIL
@@ -425,7 +426,7 @@ coneOfVisionAngle
 coneOfVisionAngle
 0
 300
-172.0
+22.0
 1
 1
 NIL
@@ -438,7 +439,7 @@ SWITCH
 494
 showConeOfVision
 showConeOfVision
-1
+0
 1
 -1000
 
@@ -479,7 +480,7 @@ CHOOSER
 ticks-difference
 ticks-difference
 10 100 1000
-0
+1
 
 PLOT
 13
