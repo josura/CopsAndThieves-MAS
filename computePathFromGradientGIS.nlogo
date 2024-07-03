@@ -5,7 +5,7 @@ breed [ thiefs thief ]
 breed [ police pol ]
 breed [ civilians civilian ]
 
-globals [ elevation slope aspect]
+globals [ elevation slope aspect robbed]
 ; the number of agents is parametrized
 
 to load-GIS-map-with-gradients
@@ -60,7 +60,7 @@ end
 to spawn-numberOfThieves
     create-thiefs numberOfThieves
     [ setxy random-xcor random-ycor
-    set color red
+    set color yellow
     set size 1
     set shape "person"
     set heading random 360
@@ -78,7 +78,7 @@ end
 to spawn-numberOfThieves-png
     create-thiefs numberOfThieves
     [ setxy random-xcor random-ycor
-        set color red
+        set color yellow
         set size 1
         set shape "person"
         set heading random 360
@@ -122,7 +122,7 @@ to spawn-numberOfCivilians
     [ setxy random-xcor random-ycor
     set color green
     set size 1
-    set shape "person"
+    set shape "face happy"
     set heading random 360
     set elevation gis:raster-sample elevation self
     set slope gis:raster-sample slope self
@@ -132,6 +132,18 @@ to spawn-numberOfCivilians
     [ set elevation gis:raster-sample elevation self
     set slope gis:raster-sample slope self
     set aspect gis:raster-sample aspect self ]
+    ]
+end
+
+to spawn-numberOfCivilians-png
+    create-civilians numberOfCivilians
+    [ setxy random-xcor random-ycor
+        set color green
+        set size 1
+        set shape "face happy"
+        set heading random 360
+        if pcolor = [0 0 0]
+        [ die ]
     ]
 end
 
@@ -150,8 +162,12 @@ end
 to move-police-png
     ask police
     [ wiggle
-        if pcolor < 240
+    ; if any patch in front of the police agent is a wall, the agent does not move
+        ifelse any? patches in-cone 3 60 with [pcolor = [0 0 0]]
+        [ wiggle ]
         [ fd 1 ]
+        ;if pcolor != [0 0 0]
+        ;[ fd 1 ]
     ]
 end
 
@@ -166,21 +182,77 @@ to move-thiefs
     ]
 end
 
+to move-thiefs-png
+    ask thiefs
+    [ wiggle
+        ifelse any? patches in-cone 3 60 with [pcolor = [0 0 0]]
+        [ wiggle ]
+        [ fd 1 ]
+    ]
+end
+
+to move-civilians
+    ask civilians
+    [ fd 1
+    ifelse elevation = 0
+    [ die ]
+    [ set elevation gis:raster-sample elevation self
+    set slope gis:raster-sample slope self
+    set aspect gis:raster-sample aspect self ]
+    ]
+end
+
+to move-civilians-png
+    ask civilians
+    [ wiggle
+        ifelse any? patches in-cone 3 60 with [pcolor = [0 0 0]]
+        [ wiggle ]
+        [ fd 1 ]
+    ]
+end
+
 to wiggle
   left random 90
   right random 90
 end
 
+; a thief robs a civilian when the thief is in the same patch as the civilian
+; if there is at least one police officer that is looking at the thief, the thief does not rob
+to try-robbery
+    ask thiefs
+    [ let thief-xcor xcor
+        let thief-ycor ycor
+        let inConeOfVision false
+        ask police
+        [ ask patches in-cone coneOfVisionRange coneOfVisionAngle
+          [if pxcor = thief-xcor and pycor = thief-ycor
+             [ set inConeOfVision true ]
+          ]
+        ]
+        ifelse not inConeOfVision
+        [set color yellow]
+        [set color blue]
+;        [ ask civilians
+;            [if any? neighbors with [pxcor = thief-xcor and pycor = thief-ycor]
+;                [ set robbed robbed + 1]]
+;        ]
+    ]
+
+
+
+end
+
 
 to setup
     clear-all
+    set robbed 0
 ;    load-GIS-map-with-gradients
     load-png-image-to-patches
 ; creating the agents
     spawn-numberOfThieves-png
     spawn-numberOfPolice-png
+    spawn-numberOfCivilians-png
 ;    spawn-numberOfCivilians
-
     reset-ticks
 end
 
@@ -192,12 +264,22 @@ to go
         [ set pcolor white ]
     ]
     ; show cone of vision for the police
-  ask police
-  [ ask patches in-cone coneOfVisionRange coneOfVisionAngle
-    [ if plabel-color = 9.9
+  if showConeOfVision
+  [
+    ask police
+    [ ask patches in-cone coneOfVisionRange coneOfVisionAngle
+      [ if plabel-color = 9.9
         [set pcolor red]
+      ]
     ]
   ]
+  ; move the agents
+  move-police-png
+  move-thiefs-png
+  move-civilians-png
+  try-robbery
+
+    tick
 
 end
 @#$#@#$#@
@@ -336,6 +418,28 @@ coneOfVisionAngle
 1
 NIL
 HORIZONTAL
+
+SWITCH
+13
+364
+190
+397
+showConeOfVision
+showConeOfVision
+1
+1
+-1000
+
+MONITOR
+12
+417
+70
+462
+NIL
+robbed
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
