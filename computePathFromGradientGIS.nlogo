@@ -1,11 +1,13 @@
 extensions [ gis ]
 
-; different types of agents with different behaviors, thiefs, police, and civilians
-breed [ thiefs thief ]
+; different types of agents with different behaviors, thieves, police, and civilians
+breed [ thieves thief ]
 breed [ police pol ]
 breed [ civilians civilian ]
 
-globals [ elevation slope aspect robbed]
+thieves-own [in-cone-of-vision]
+
+globals [ elevation slope aspect robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks ]
 ; the number of agents is parametrized
 
 to load-GIS-map-with-gradients
@@ -58,7 +60,7 @@ end
 ; the agents cannot spawn in patches with grayscale value 0
 
 to spawn-numberOfThieves
-    create-thiefs numberOfThieves
+    create-thieves numberOfThieves
     [ setxy random-xcor random-ycor
     set color yellow
     set size 1
@@ -76,12 +78,13 @@ to spawn-numberOfThieves
 end
 
 to spawn-numberOfThieves-png
-    create-thiefs numberOfThieves
+    create-thieves numberOfThieves
     [ setxy random-xcor random-ycor
         set color yellow
         set size 1
         set shape "person"
         set heading random 360
+        set in-cone-of-vision false
         if pcolor = [0 0 0]
         [ die ]
     ]
@@ -171,8 +174,8 @@ to move-police-png
     ]
 end
 
-to move-thiefs
-    ask thiefs
+to move-thieves
+    ask thieves
     [ fd 1
     ifelse elevation = 0
     [ die ]
@@ -182,8 +185,8 @@ to move-thiefs
     ]
 end
 
-to move-thiefs-png
-    ask thiefs
+to move-thieves-png
+    ask thieves
     [ wiggle
         ifelse any? patches in-cone 3 60 with [pcolor = [0 0 0]]
         [ wiggle ]
@@ -219,20 +222,13 @@ end
 ; a thief robs a civilian when the thief is in the same patch as the civilian
 ; if there is at least one police officer that is looking at the thief, the thief does not rob
 to try-robbery
-    ask thiefs
-    [ let thief-xcor xcor
-        let thief-ycor ycor
-        let inConeOfVision false
-        ask police
-        [ ask patches in-cone coneOfVisionRange coneOfVisionAngle
-          [if pxcor = thief-xcor and pycor = thief-ycor
-             [ set inConeOfVision true ]
-          ]
-        ]
-        ifelse not inConeOfVision
-        [set color yellow]
-        [set color blue]
-;        [ ask civilians
+    ask thieves
+    [ ifelse in-cone-of-vision
+      [ set color blue]
+      [set color yellow
+        ask civilians-here
+          [ set robbed robbed + 1 ]
+      ]
 ;            [if any? neighbors with [pxcor = thief-xcor and pycor = thief-ycor]
 ;                [ set robbed robbed + 1]]
 ;        ]
@@ -242,6 +238,16 @@ to try-robbery
 
 end
 
+to compute-robbed-rate
+    set rate-of-change-robbed (robbed - checkpoint-robbed) / (ticks - checkpoint-ticks)
+    set checkpoint-robbed robbed
+    set checkpoint-ticks ticks
+end
+
+to clear-thieves
+  ask thieves
+  [set in-cone-of-vision false]
+end
 
 to setup
     clear-all
@@ -263,23 +269,29 @@ to go
       if pcolor = red
         [ set pcolor white ]
     ]
+    ; reset the thieves state
+    clear-thieves
     ; show cone of vision for the police
-  if showConeOfVision
-  [
     ask police
     [ ask patches in-cone coneOfVisionRange coneOfVisionAngle
-      [ if plabel-color = 9.9
-        [set pcolor red]
+      [ if plabel-color = 9.9 and showConeOfVision
+        [set pcolor red ]
+        ; update state of thieves in cone of vision
+        ask thieves-here
+        [set in-cone-of-vision true
+        ]
       ]
     ]
-  ]
   ; move the agents
   move-police-png
-  move-thiefs-png
+  move-thieves-png
   move-civilians-png
   try-robbery
+  ; compute the rate of change of the number of robbed civilians after a defined number of ticks, given as a parameter
+  if checkpoint-ticks - ticks >= ticks-difference
+  [compute-robbed-rate]
 
-    tick
+  tick
 
 end
 @#$#@#$#@
@@ -312,9 +324,9 @@ ticks
 
 BUTTON
 20
-31
+30
 87
-64
+63
 NIL
 setup
 NIL
@@ -328,10 +340,10 @@ NIL
 1
 
 SLIDER
-16
-101
-188
-134
+15
+198
+187
+231
 numberOfPolice
 numberOfPolice
 0
@@ -343,10 +355,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-16
-155
-188
-188
+15
+252
+187
+285
 numberOfThieves
 numberOfThieves
 0
@@ -358,10 +370,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-17
-207
-189
-240
+16
+304
+188
+337
 numberOfCivilians
 numberOfCivilians
 0
@@ -374,9 +386,9 @@ HORIZONTAL
 
 BUTTON
 122
-31
+30
 185
-64
+63
 run
 go
 T
@@ -390,40 +402,40 @@ NIL
 1
 
 SLIDER
-20
-264
-198
-297
+19
+361
+197
+394
 coneOfVisionRange
 coneOfVisionRange
 0
 50
-11.0
+20.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-309
-189
-342
+14
+406
+188
+439
 coneOfVisionAngle
 coneOfVisionAngle
 0
 300
-50.0
+172.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-13
-364
-190
-397
+12
+461
+189
+494
 showConeOfVision
 showConeOfVision
 1
@@ -431,15 +443,61 @@ showConeOfVision
 -1000
 
 MONITOR
-12
-417
-70
-462
+11
+514
+69
+559
 NIL
 robbed
 17
 1
 11
+
+PLOT
+13
+587
+213
+737
+robbed people
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot robbed"
+
+CHOOSER
+33
+108
+171
+153
+ticks-difference
+ticks-difference
+10 100 1000
+0
+
+PLOT
+13
+748
+213
+898
+rate of change
+NIL
+NIL
+0.0
+10.0
+10.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot rate-of-change-robbed"
 
 @#$#@#$#@
 ## WHAT IS IT?
