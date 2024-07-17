@@ -9,41 +9,8 @@ thieves-own [in-cone-of-vision]
 
 police-own [current-cone-of-vision-range]
 
-globals [ elevation slope aspect robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks ]
+globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks ]
 ; the number of agents is parametrized
-
-to load-GIS-map-with-gradients
-    clear-all
-    set elevation gis:load-dataset "/opt/netlogo/models/Code Examples/Extensions Examples/gis/data/local-elevation.asc"
-    gis:set-world-envelope gis:envelope-of elevation
-    let horizontal-gradient gis:convolve elevation 3 3 [ 1 1 1 0 0 0 -1 -1 -1 ] 1 1
-    let vertical-gradient gis:convolve elevation 3 3 [ 1 0 -1 1 0 -1 1 0 -1 ] 1 1
-    set slope gis:create-raster gis:width-of elevation gis:height-of elevation gis:envelope-of elevation
-    set aspect gis:create-raster gis:width-of elevation gis:height-of elevation gis:envelope-of elevation
-    let x 0
-    repeat (gis:width-of slope)
-    [ let y 0
-        repeat (gis:height-of slope)
-        [ let gx gis:raster-value horizontal-gradient x y
-        let gy gis:raster-value vertical-gradient x y
-        if ((gx <= 0) or (gx >= 0)) and ((gy <= 0) or (gy >= 0))
-        [ let s sqrt ((gx * gx) + (gy * gy))
-            gis:set-raster-value slope x y s
-            ifelse (gx != 0) or (gy != 0)
-            [ gis:set-raster-value aspect x y atan gy gx ]
-            [ gis:set-raster-value aspect x y 0 ] ]
-        set y y + 1 ]
-        set x x + 1 ]
-    gis:set-sampling-method aspect "bilinear"
-;    ask patches
-;    [ sprout 1
-;        [ set color blue
-;        let h gis:raster-sample aspect self
-;        ifelse h >= -360
-;        [ set heading subtract-headings h 180 ]
-;        [ die ] ] ]
-    gis:paint elevation 0
-end
 
 to load-png-image-to-patches
     clear-all
@@ -60,25 +27,6 @@ to load-png-image-to-patches
 end
 
 ; the agents cannot spawn in patches with grayscale value 0
-
-to spawn-numberOfThieves
-    create-thieves numberOfThieves
-    [ setxy random-xcor random-ycor
-    set color yellow
-    set size 1
-    set shape "person"
-    set heading random 360
-;    set elevation gis:raster-sample elevation self
-;    set slope gis:raster-sample slope self
-;    set aspect gis:raster-sample aspect self
-    if elevation = 0
-    [ die ]
-;    [ set elevation gis:raster-sample elevation self
-;    set slope gis:raster-sample slope self
-;    set aspect gis:raster-sample aspect self ]
-    ]
-end
-
 to spawn-numberOfThieves-png
     create-thieves numberOfThieves
     [ setxy random-xcor random-ycor
@@ -89,24 +37,6 @@ to spawn-numberOfThieves-png
         set in-cone-of-vision false
         if pcolor = [0 0 0]
         [ die ]
-    ]
-end
-
-to spawn-numberOfPolice
-    create-police numberOfPolice
-    [ setxy random-xcor random-ycor
-    set color blue
-    set size 1
-    set shape "default"
-    set heading random 360
-;    set elevation gis:raster-sample elevation self
-;    set slope gis:raster-sample slope self
-;    set aspect gis:raster-sample aspect self
-    if elevation = 0
-    [ die ]
-;    [ set elevation gis:raster-sample elevation self
-;    set slope gis:raster-sample slope self
-;    set aspect gis:raster-sample aspect self ]
     ]
 end
 
@@ -122,24 +52,6 @@ to spawn-numberOfPolice-png
     ]
 end
 
-to spawn-numberOfCivilians
-    create-civilians numberOfCivilians
-    [ setxy random-xcor random-ycor
-    set color green
-    set size 1
-    set shape "face happy"
-    set heading random 360
-    set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self
-    ifelse elevation = 0
-    [ die ]
-    [ set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self ]
-    ]
-end
-
 to spawn-numberOfCivilians-png
     create-civilians numberOfCivilians
     [ setxy random-xcor random-ycor
@@ -149,17 +61,6 @@ to spawn-numberOfCivilians-png
         set heading random 360
         if pcolor = [0 0 0]
         [ die ]
-    ]
-end
-
-to move-police
-    ask police
-    [ fd 1
-    ifelse elevation = 0
-    [ die ]
-    [ set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self ]
     ]
 end
 
@@ -176,34 +77,12 @@ to move-police-png
     ]
 end
 
-to move-thieves
-    ask thieves
-    [ fd 1
-    ifelse elevation = 0
-    [ die ]
-    [ set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self ]
-    ]
-end
-
 to move-thieves-png
     ask thieves
     [ wiggle
         ifelse any? patches in-cone 3 60 with [pcolor = [0 0 0]]
         [ wiggle ]
         [ fd 1 ]
-    ]
-end
-
-to move-civilians
-    ask civilians
-    [ fd 1
-    ifelse elevation = 0
-    [ die ]
-    [ set elevation gis:raster-sample elevation self
-    set slope gis:raster-sample slope self
-    set aspect gis:raster-sample aspect self ]
     ]
 end
 
@@ -259,7 +138,6 @@ end
 to setup
     clear-all
     set robbed 0
-;    load-GIS-map-with-gradients
     load-png-image-to-patches
 ; creating the agents
     spawn-numberOfThieves-png
