@@ -163,7 +163,11 @@ to go
       let final-cone-of-vision-range coneOfVisionRange
       ask patches in-cone coneOfVisionRange coneOfVisionAngle
       [ if pcolor = [0 0 0]
-        [set final-cone-of-vision-range distancexy police-xcor police-ycor]
+        [ let tmp-final-cone-of-vision-range distancexy police-xcor police-ycor
+          if tmp-final-cone-of-vision-range < final-cone-of-vision-range
+          [ set final-cone-of-vision-range tmp-final-cone-of-vision-range
+          ]
+        ]
       ]
       set current-cone-of-vision-range final-cone-of-vision-range
     ]
@@ -308,7 +312,7 @@ coneOfVisionRange
 coneOfVisionRange
 0
 50
-13.0
+19.0
 1
 1
 NIL
@@ -323,7 +327,7 @@ coneOfVisionAngle
 coneOfVisionAngle
 0
 300
-22.0
+158.0
 1
 1
 NIL
