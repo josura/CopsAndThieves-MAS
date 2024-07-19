@@ -1,4 +1,4 @@
-extensions [ gis ]
+extensions [ gis bitmap ]
 
 ; different types of agents with different behaviors, thieves, police, and civilians
 breed [ thieves thief ]
@@ -9,8 +9,16 @@ thieves-own [in-cone-of-vision]
 
 police-own [current-cone-of-vision-range]
 
-globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks ]
+globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap ]
 ; the number of agents is parametrized
+
+to load-png-image-to-obstacles-bitmap
+  set obstacles-bitmap bitmap:import "data/Ostacoli.png"
+end
+
+to load-png-image-to-flux-bitmap
+  set flux-bitmap bitmap:import "data/Flussi.png"
+end
 
 to load-png-image-to-patches
     clear-all
@@ -114,9 +122,6 @@ to try-robbery
 ;                [ set robbed robbed + 1]]
 ;        ]
     ]
-
-
-
 end
 
 to compute-robbed-rate
@@ -144,6 +149,8 @@ to setup
     spawn-numberOfPolice-png
     spawn-numberOfCivilians-png
 ;    spawn-numberOfCivilians
+    load-png-image-to-obstacles-bitmap
+    load-png-image-to-flux-bitmap
     reset-ticks
 end
 
@@ -194,7 +201,6 @@ to go
   ]
   reset-police-coneOfVision
   tick
-
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
