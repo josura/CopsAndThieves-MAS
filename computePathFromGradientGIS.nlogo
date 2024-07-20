@@ -14,15 +14,20 @@ globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstac
 
 to load-png-image-to-obstacles-bitmap
   set obstacles-bitmap bitmap:import "data/Ostacoli.png"
+  ; resize the bitmap to the size of the patches
+  set obstacles-bitmap bitmap:scaled obstacles-bitmap world-width world-height
 end
 
 to load-png-image-to-flux-bitmap
   set flux-bitmap bitmap:import "data/Flussi.png"
+  ; resize the bitmap to the size of the patches
+  set flux-bitmap bitmap:scaled flux-bitmap world-width world-height
 end
 
 to load-png-image-to-patches
     clear-all
-    import-pcolors-rgb "testMap.png"
+    ; to change to the actual image
+    import-pcolors-rgb "data/Ostacoli.png"
     ask patches
     [ if pcolor = black
       [set plabel-color 0]
@@ -36,6 +41,19 @@ end
 
 ; the agents cannot spawn in patches with grayscale value 0
 to spawn-numberOfThieves-png
+    create-thieves numberOfThieves
+    [ setxy random-xcor random-ycor
+        set color yellow
+        set size 1
+        set shape "person"
+        set heading random 360
+        set in-cone-of-vision false
+        if pcolor = [0 0 0]
+        [ die ]
+    ]
+end
+
+to spawn-numberOfThieves-bitmap
     create-thieves numberOfThieves
     [ setxy random-xcor random-ycor
         set color yellow
@@ -143,14 +161,16 @@ end
 to setup
     clear-all
     set robbed 0
-    load-png-image-to-patches
+    ; load-png-image-to-patches
+    load-png-image-to-obstacles-bitmap
+    load-png-image-to-flux-bitmap
+    ; temporarly visualize obstacles bitmap
+    bitmap:copy-to-pcolors obstacles-bitmap true
 ; creating the agents
     spawn-numberOfThieves-png
     spawn-numberOfPolice-png
     spawn-numberOfCivilians-png
 ;    spawn-numberOfCivilians
-    load-png-image-to-obstacles-bitmap
-    load-png-image-to-flux-bitmap
     reset-ticks
 end
 
@@ -204,13 +224,13 @@ to go
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-220
-16
-1479
-1276
+230
+10
+1325
+1106
 -1
 -1
-12.39
+7.2
 1
 10
 1
@@ -220,10 +240,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--50
-50
--50
-50
+0
+150
+0
+150
 0
 0
 1
