@@ -1,4 +1,4 @@
-extensions [ gis bitmap ]
+extensions [ gis bitmap matrix ]
 
 ; different types of agents with different behaviors, thieves, police, and civilians
 breed [ thieves thief ]
@@ -9,7 +9,7 @@ thieves-own [in-cone-of-vision]
 
 police-own [current-cone-of-vision-range]
 
-globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap ]
+globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap obstacles-matrix flux-matrix ]
 ; the number of agents is parametrized
 
 to load-png-image-to-obstacles-bitmap
@@ -22,6 +22,31 @@ to load-png-image-to-flux-bitmap
   set flux-bitmap bitmap:import "data/Flussi.png"
   ; resize the bitmap to the size of the patches
   set flux-bitmap bitmap:scaled flux-bitmap world-width world-height
+end
+
+to load-png-image-to-flux-matrix
+  ; load the image into the patches and copy the values to the flux-matrix
+  import-pcolors-rgb "data/Flussi.png"
+  set flux-matrix matrix:make-constant world-width world-height 0
+  ask patches
+  [ let this-pcolor pcolor
+    ; convert the rgb plabel color to a grayscale value
+    let flux-value (item 0 pcolor + item 1 pcolor + item 2 pcolor) / 3
+    ; set the flux value to the corresponing flux-matrix place
+    matrix:set flux-matrix pycor pxcor flux-value
+  ]   
+end
+
+to load-png-image-to-obstacles-matrix 
+  import-pcolors-rgb "data/Ostacoli.png"
+  set obstacles-matrix matrix:make-constant world-width world-height 0
+  ask patches
+  [ let this-pcolor pcolor
+    ; convert the rgb plabel color to a grayscale value
+    let obstacle-value (item 0 pcolor + item 1 pcolor + item 2 pcolor) / 3
+    ; set the obstacle value to the corresponing obstacles-matrix place
+    matrix:set obstacles-matrix pycor pxcor obstacle-value  
+  ]
 end
 
 to load-png-image-to-patches
@@ -164,8 +189,11 @@ to setup
     ; load-png-image-to-patches
     load-png-image-to-obstacles-bitmap
     load-png-image-to-flux-bitmap
+    load-png-image-to-obstacles-matrix
+    load-png-image-to-flux-matrix
     ; temporarly visualize obstacles bitmap
-    bitmap:copy-to-pcolors obstacles-bitmap true
+    ; bitmap:copy-to-pcolors obstacles-bitmap true
+    import-pcolors-rgb "data/place.jpg"
 ; creating the agents
     spawn-numberOfThieves-png
     spawn-numberOfPolice-png
