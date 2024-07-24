@@ -34,10 +34,10 @@ to load-png-image-to-flux-matrix
     let flux-value (item 0 pcolor + item 1 pcolor + item 2 pcolor) / 3
     ; set the flux value to the corresponing flux-matrix place
     matrix:set flux-matrix pycor pxcor flux-value
-  ]   
+  ]
 end
 
-to load-png-image-to-obstacles-matrix 
+to load-png-image-to-obstacles-matrix
   import-pcolors-rgb "data/Ostacoli.png"
   set obstacles-matrix matrix:make-constant world-width world-height 0
   ask patches
@@ -45,7 +45,7 @@ to load-png-image-to-obstacles-matrix
     ; convert the rgb plabel color to a grayscale value
     let obstacle-value (item 0 pcolor + item 1 pcolor + item 2 pcolor) / 3
     ; set the obstacle value to the corresponing obstacles-matrix place
-    matrix:set obstacles-matrix pycor pxcor obstacle-value  
+    matrix:set obstacles-matrix pycor pxcor obstacle-value
   ]
 end
 
@@ -91,6 +91,19 @@ to spawn-numberOfThieves-bitmap
     ]
 end
 
+to spawn-numberOfThieves-matrix
+    create-thieves numberOfThieves
+    [ setxy random-xcor random-ycor
+        set color yellow
+        set size 1
+        set shape "person"
+        set heading random 360
+        set in-cone-of-vision false
+        if matrix:get obstacles-matrix pycor pxcor = 0
+        [ die ]
+    ]
+end
+
 to spawn-numberOfPolice-png
     create-police numberOfPolice
     [ setxy random-xcor random-ycor
@@ -103,6 +116,18 @@ to spawn-numberOfPolice-png
     ]
 end
 
+to spawn-numberOfPolice-matrix
+    create-police numberOfPolice
+    [ setxy random-xcor random-ycor
+        set color blue
+        set size 1
+        set shape "default"
+        set heading random 360
+        if matrix:get obstacles-matrix pycor pxcor = 0
+        [ die ]
+    ]
+end
+
 to spawn-numberOfCivilians-png
     create-civilians numberOfCivilians
     [ setxy random-xcor random-ycor
@@ -111,6 +136,18 @@ to spawn-numberOfCivilians-png
         set shape "face happy"
         set heading random 360
         if pcolor = [0 0 0]
+        [ die ]
+    ]
+end
+
+to spawn-numberOfCivilians-matrix
+    create-civilians numberOfCivilians
+    [ setxy random-xcor random-ycor
+        set color green
+        set size 1
+        set shape "face happy"
+        set heading random 360
+        if matrix:get obstacles-matrix pycor pxcor = 0
         [ die ]
     ]
 end
@@ -128,6 +165,16 @@ to move-police-png
     ]
 end
 
+to move-police-matrix
+    ask police
+    [ wiggle
+    ; if any patch in front of the police agent is a wall, the agent does not move
+        ifelse any? patches in-cone 3 60 with [matrix:get obstacles-matrix pycor pxcor = 0]
+        [ wiggle ]
+        [ fd 1 ]
+    ]
+end
+
 to move-thieves-png
     ask thieves
     [ wiggle
@@ -137,10 +184,28 @@ to move-thieves-png
     ]
 end
 
+to move-thieves-matrix
+    ask thieves
+    [ wiggle
+        ifelse any? patches in-cone 3 60 with [matrix:get obstacles-matrix pycor pxcor = 0]
+        [ wiggle ]
+        [ fd 1 ]
+    ]
+end
+
 to move-civilians-png
     ask civilians
     [ wiggle
         ifelse any? patches in-cone 3 60 with [pcolor = [0 0 0]]
+        [ wiggle ]
+        [ fd 1 ]
+    ]
+end
+
+to move-civilians-matrix
+    ask civilians
+    [ wiggle
+        ifelse any? patches in-cone 3 60 with [matrix:get obstacles-matrix pycor pxcor = 0]
         [ wiggle ]
         [ fd 1 ]
     ]
@@ -193,11 +258,13 @@ to setup
     load-png-image-to-flux-matrix
     ; temporarly visualize obstacles bitmap
     ; bitmap:copy-to-pcolors obstacles-bitmap true
-    import-pcolors-rgb "data/place.jpg"
+    ifelse showObstacles
+    [ import-drawing "data/Ostacoli.png"]
+    [ import-drawing "data/place.jpg"]
 ; creating the agents
-    spawn-numberOfThieves-png
-    spawn-numberOfPolice-png
-    spawn-numberOfCivilians-png
+    spawn-numberOfThieves-matrix
+    spawn-numberOfPolice-matrix
+    spawn-numberOfCivilians-matrix
 ;    spawn-numberOfCivilians
     reset-ticks
 end
@@ -217,7 +284,8 @@ to go
       let police-ycor ycor
       let final-cone-of-vision-range coneOfVisionRange
       ask patches in-cone coneOfVisionRange coneOfVisionAngle
-      [ if pcolor = [0 0 0]
+      [ ;if pcolor = [0 0 0]
+        if matrix:get obstacles-matrix pycor pxcor = 0
         [ let tmp-final-cone-of-vision-range distancexy police-xcor police-ycor
           if tmp-final-cone-of-vision-range < final-cone-of-vision-range
           [ set final-cone-of-vision-range tmp-final-cone-of-vision-range
@@ -428,10 +496,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot robbed"
 
 CHOOSER
-33
-108
-171
-153
+32
+145
+170
+190
 ticks-difference
 ticks-difference
 10 100 1000
@@ -454,6 +522,17 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot rate-of-change-robbed"
+
+SWITCH
+19
+94
+173
+127
+showObstacles
+showObstacles
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
