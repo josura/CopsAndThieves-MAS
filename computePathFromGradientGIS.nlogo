@@ -13,7 +13,7 @@ globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstac
 ; the number of agents is parametrized
 
 to load-png-image-to-obstacles-bitmap
-  set obstacles-bitmap bitmap:import "data/Ostacoli.png"
+  set obstacles-bitmap bitmap:import "data/OstacoliCorretti.png"
   ; resize the bitmap to the size of the patches
   set obstacles-bitmap bitmap:scaled obstacles-bitmap world-width world-height
 end
@@ -38,7 +38,7 @@ to load-png-image-to-flux-matrix
 end
 
 to load-png-image-to-obstacles-matrix
-  import-pcolors-rgb "data/Ostacoli.png"
+  import-pcolors-rgb "data/OstacoliCorretti.png"
   set obstacles-matrix matrix:make-constant world-width world-height 0
   ask patches
   [ let this-pcolor pcolor
@@ -52,7 +52,7 @@ end
 to load-png-image-to-patches
     clear-all
     ; to change to the actual image
-    import-pcolors-rgb "data/Ostacoli.png"
+    import-pcolors-rgb "data/OstacoliCorretti.png"
     ask patches
     [ if pcolor = black
       [set plabel-color 0]
@@ -165,7 +165,7 @@ to move-police-png
     ]
 end
 
-to move-police-matrix
+to move-police-random-matrix
     ask police
     [ wiggle
     ; if any patch in front of the police agent is a wall, the agent does not move
@@ -184,7 +184,7 @@ to move-thieves-png
     ]
 end
 
-to move-thieves-matrix
+to move-thieves-random-matrix
     ask thieves
     [ wiggle
         ifelse any? patches in-cone 3 60 with [matrix:get obstacles-matrix pycor pxcor = 0]
@@ -202,7 +202,7 @@ to move-civilians-png
     ]
 end
 
-to move-civilians-matrix
+to move-civilians-random-matrix
     ask civilians
     [ wiggle
         ifelse any? patches in-cone 3 60 with [matrix:get obstacles-matrix pycor pxcor = 0]
@@ -259,7 +259,7 @@ to setup
     ; temporarly visualize obstacles bitmap
     ; bitmap:copy-to-pcolors obstacles-bitmap true
     ifelse showObstacles
-    [ import-drawing "data/Ostacoli.png"]
+    [ import-pcolors-rgb "data/OstacoliCorretti.png"]
     [ import-drawing "data/place.jpg"]
 ; creating the agents
     spawn-numberOfThieves-matrix
@@ -321,9 +321,8 @@ end
 
 to go
     ; reset the color of the patches
-    ifelse showObstacles
-    [ import-drawing "data/Ostacoli.png"]
-    [ import-drawing "data/place.jpg"]
+    if showObstacles
+    [ import-pcolors-rgb "data/OstacoliCorretti.png"]
     ; reset the thieves state
     clear-thieves
     ; compute the cone of vision for the police, if a wall is present, the police agent changes its cone of vision range to the distance between the agent and the wall
@@ -345,7 +344,7 @@ to go
     ; show cone of vision for the police
     ask police
     [ ask patches in-cone current-cone-of-vision-range coneOfVisionAngle
-      [ if plabel-color = 9.9 and showConeOfVision
+      [ if matrix:get obstacles-matrix pycor pxcor = 0 and showConeOfVision
         [set pcolor red ]
         ; update state of thieves in cone of vision
         ask thieves-here
@@ -354,9 +353,9 @@ to go
       ]
     ]
   ; move the agents
-  move-police-png
-  move-thieves-png
-  move-civilians-png
+  move-police-random-matrix
+  move-thieves-random-matrix
+  move-civilians-random-matrix
   try-robbery
   ; compute the rate of change of the number of robbed civilians after a defined number of ticks, given as a parameter
   if ticks - checkpoint-ticks  >= ticks-difference
@@ -366,7 +365,6 @@ to go
   reset-police-coneOfVision
   tick
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 230
