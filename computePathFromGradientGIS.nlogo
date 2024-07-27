@@ -1,4 +1,4 @@
-extensions [ gis bitmap matrix ]
+extensions [ gis bitmap matrix table ]
 
 ; different types of agents with different behaviors, thieves, police, and civilians
 breed [ thieves thief ]
@@ -159,31 +159,35 @@ to-report compute-shortest-path [startPoint endPoint]
   let endPatch patch (item 0 endPoint) (item 1 endPoint)
 
   ; Initialize the BFS variables
-  let queue (list startPatch)
+  let queue (list startPoint)
   let cameFrom (table:make)
-  table:put cameFrom startPatch nobody
+  table:put cameFrom startPoint nobody
 
   ; While there are patches to explore
   while [not empty? queue] [
     ; Get the current patch from the queue
-    let current first queue
+    let current-pos first queue
+    let current patch (item 0 current-pos) (item 1 current-pos)
     set queue but-first queue
 
     ; If we have reached the end point, reconstruct the path
     if (current = endPatch) [
-      report reconstruct-path startPatch endPatch cameFrom
+      report reconstruct-path startPoint endPoint cameFrom
     ]
 
     ; Explore the neighbors of the current patch
-    foreach neighbors4 current [
-      let neighbor ?
-      let neighbor-xcor [pxcor] of neighbor
-      let neighbor-ycor [pycor] of neighbor
-      ; Check if the neighbor is valid (not a wall and not visited)
-      if matrix:get obstacles-matrix neighbor-ycor neighbor-xcor != 0 and not table:has-key? cameFrom neighbor [
-        ; Mark this neighbor as visited and add to the queue
-        table:put cameFrom neighbor current
-        set queue lput neighbor queue
+    ask current[
+      ask neighbors4 [
+        let neighbor self
+        let neighbor-xcor [pxcor] of neighbor
+        let neighbor-ycor [pycor] of neighbor
+        let neighbor-pos (list neighbor-xcor neighbor-ycor)
+        ; Check if the neighbor is valid (not a wall and not visited)
+        if matrix:get obstacles-matrix neighbor-ycor neighbor-xcor != 0 and not table:has-key? cameFrom neighbor-pos [
+          ; Mark this neighbor as visited and add to the queue
+          table:put cameFrom neighbor-pos current-pos
+          set queue lput neighbor-pos queue
+        ]
       ]
     ]
   ]
@@ -195,28 +199,30 @@ end
 to-report reconstruct-path [startPatch endPatch cameFrom]
   let path (list endPatch)
   let current endPatch
-  
+
   while [current != startPatch] [
     set current table:get cameFrom current
     set path lput current path
   ]
-  
+
   report reverse path
 end
 
 
 to spawn-numberOfCivilians-shortest-path
   create-civilians numberOfCivilians
-  [let starting-exit-point item random 8 exit-points
-    let ending-exit-point item random 8 exit-points
+  [let starting-exit-point item (random 8) exit-points
+    let ending-exit-point item (random 8) exit-points
     set start-exit-point starting-exit-point
     set end-exit-point ending-exit-point
-    set shortest-path-to-exit []
+    set xcor (item 0 starting-exit-point)
+    set ycor (item 1 starting-exit-point)
+    set shortest-path-to-exit compute-shortest-path start-exit-point end-exit-point
     set current-place-number 0
     set color green
     set size 1
     set shape "face happy"
-  ] 
+  ]
 end
 
 ; police move in patches in a random direction, if a wall is present (values between 240 and 255) the police agent does not move
@@ -278,7 +284,19 @@ to move-civilians-random-matrix
     ]
 end
 
-to move-civilians-shortest-path 
+to move-civilians-shortest-path
+  ask civilians
+  [ if current-place-number < length shortest-path-to-exit
+    [ let next-place item current-place-number shortest-path-to-exit
+      let next-xcor item 0 next-place
+      let next-ycor item 1 next-place
+      face patch next-xcor next-ycor
+      set xcor next-xcor
+      set ycor next-ycor
+      ;fd 1
+      set current-place-number current-place-number + 1
+    ]
+  ]
 end
 
 to wiggle
@@ -336,11 +354,11 @@ to setup
     [ import-pcolors-rgb "data/OstacoliCorretti.png"]
     [ import-drawing "data/place.jpg"]
 ; creating the agents
+    init-exit-points
     spawn-numberOfThieves-matrix
     spawn-numberOfPolice-matrix
-    spawn-numberOfCivilians-matrix
-;    spawn-numberOfCivilians
-    init-exit-points
+;    spawn-numberOfCivilians-matrix
+    spawn-numberOfCivilians-shortest-path
     reset-ticks
 end
 
@@ -430,7 +448,8 @@ to go
   ; move the agents
   move-police-random-matrix
   move-thieves-random-matrix
-  move-civilians-random-matrix
+  ; move-civilians-random-matrix
+  move-civilians-shortest-path
   try-robbery
   ; compute the rate of change of the number of robbed civilians after a defined number of ticks, given as a parameter
   if ticks - checkpoint-ticks  >= ticks-difference
@@ -652,7 +671,7 @@ SWITCH
 127
 showObstacles
 showObstacles
-0
+1
 1
 -1000
 
