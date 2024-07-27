@@ -9,7 +9,9 @@ thieves-own [in-cone-of-vision]
 
 police-own [current-cone-of-vision-range]
 
-globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap obstacles-matrix flux-matrix ]
+civilians-own [start-exit-point end-exit-point shortest-path-to-exit current-place-number]
+
+globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap obstacles-matrix flux-matrix exit-points]
 ; the number of agents is parametrized
 
 to load-png-image-to-obstacles-bitmap
@@ -152,6 +154,71 @@ to spawn-numberOfCivilians-matrix
     ]
 end
 
+to-report compute-shortest-path [startPoint endPoint]
+  let startPatch patch (item 0 startPoint) (item 1 startPoint)
+  let endPatch patch (item 0 endPoint) (item 1 endPoint)
+
+  ; Initialize the BFS variables
+  let queue (list startPatch)
+  let cameFrom (table:make)
+  table:put cameFrom startPatch nobody
+
+  ; While there are patches to explore
+  while [not empty? queue] [
+    ; Get the current patch from the queue
+    let current first queue
+    set queue but-first queue
+
+    ; If we have reached the end point, reconstruct the path
+    if (current = endPatch) [
+      report reconstruct-path startPatch endPatch cameFrom
+    ]
+
+    ; Explore the neighbors of the current patch
+    foreach neighbors4 current [
+      let neighbor ?
+      let neighbor-xcor [pxcor] of neighbor
+      let neighbor-ycor [pycor] of neighbor
+      ; Check if the neighbor is valid (not a wall and not visited)
+      if matrix:get obstacles-matrix neighbor-ycor neighbor-xcor != 0 and not table:has-key? cameFrom neighbor [
+        ; Mark this neighbor as visited and add to the queue
+        table:put cameFrom neighbor current
+        set queue lput neighbor queue
+      ]
+    ]
+  ]
+
+  ; If no path is found
+  report []
+end
+
+to-report reconstruct-path [startPatch endPatch cameFrom]
+  let path (list endPatch)
+  let current endPatch
+  
+  while [current != startPatch] [
+    set current table:get cameFrom current
+    set path lput current path
+  ]
+  
+  report reverse path
+end
+
+
+to spawn-numberOfCivilians-shortest-path
+  create-civilians numberOfCivilians
+  [let starting-exit-point item random 8 exit-points
+    let ending-exit-point item random 8 exit-points
+    set start-exit-point starting-exit-point
+    set end-exit-point ending-exit-point
+    set shortest-path-to-exit []
+    set current-place-number 0
+    set color green
+    set size 1
+    set shape "face happy"
+  ] 
+end
+
 ; police move in patches in a random direction, if a wall is present (values between 240 and 255) the police agent does not move
 to move-police-png
     ask police
@@ -211,6 +278,9 @@ to move-civilians-random-matrix
     ]
 end
 
+to move-civilians-shortest-path 
+end
+
 to wiggle
   left random 90
   right random 90
@@ -248,6 +318,10 @@ to reset-police-coneOfVision
   [set current-cone-of-vision-range coneOfVisionRange]
 end
 
+to init-exit-points
+  set exit-points [[65 148] [137 149] [2 122] [15 68] [142 87] [149 33] [93 8] [1 6]]
+end
+
 to setup
     clear-all
     set robbed 0
@@ -266,6 +340,7 @@ to setup
     spawn-numberOfPolice-matrix
     spawn-numberOfCivilians-matrix
 ;    spawn-numberOfCivilians
+    init-exit-points
     reset-ticks
 end
 
@@ -344,7 +419,7 @@ to go
     ; show cone of vision for the police
     ask police
     [ ask patches in-cone current-cone-of-vision-range coneOfVisionAngle
-      [ if matrix:get obstacles-matrix pycor pxcor = 0 and showConeOfVision
+      [ if matrix:get obstacles-matrix pycor pxcor = 255 and showConeOfVision
         [set pcolor red ]
         ; update state of thieves in cone of vision
         ask thieves-here
