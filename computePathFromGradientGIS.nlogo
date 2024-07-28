@@ -9,7 +9,7 @@ thieves-own [in-cone-of-vision]
 
 police-own [current-cone-of-vision-range]
 
-civilians-own [start-exit-point end-exit-point shortest-path-to-exit current-place-number]
+civilians-own [start-exit-point end-exit-point shortest-path-to-exit current-place-number current-flux-waiting-time]
 
 globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap obstacles-matrix flux-matrix exit-points]
 ; the number of agents is parametrized
@@ -209,10 +209,13 @@ to-report reconstruct-path [startPatch endPatch cameFrom]
 end
 
 
-to spawn-numberOfCivilians-shortest-path
-  create-civilians numberOfCivilians
+to spawn-numberOfCivilians-shortest-path [civilians-to-spawn]
+  create-civilians civilians-to-spawn
   [let starting-exit-point item (random 8) exit-points
     let ending-exit-point item (random 8) exit-points
+    ; reloop if the starting and ending exit points are the same
+    while [starting-exit-point = ending-exit-point]
+    [set ending-exit-point item (random 8) exit-points]
     set start-exit-point starting-exit-point
     set end-exit-point ending-exit-point
     set xcor (item 0 starting-exit-point)
@@ -299,6 +302,26 @@ to move-civilians-shortest-path
   ]
 end
 
+; following the shortest path, but waiting proportional to the flux value of the patch
+to move-civilians-shortest-path-with-flux
+  ask civilians
+  [ if current-place-number < length shortest-path-to-exit and current-flux-waiting-time = 0
+    [ let next-place item current-place-number shortest-path-to-exit
+      let next-xcor item 0 next-place
+      let next-ycor item 1 next-place
+      face patch next-xcor next-ycor
+      set xcor next-xcor
+      set ycor next-ycor
+      ;fd 1
+      set current-place-number current-place-number + 1
+      set current-flux-waiting-time matrix:get flux-matrix next-ycor next-xcor
+    ]
+    if current-flux-waiting-time > 0
+    [ set current-flux-waiting-time current-flux-waiting-time - 1
+    ]
+  ]
+end
+
 to wiggle
   left random 90
   right random 90
@@ -340,6 +363,17 @@ to init-exit-points
   set exit-points [[65 148] [137 149] [2 122] [15 68] [142 87] [149 33] [93 8] [1 6]]
 end
 
+to respawn-civilians
+  let civilians-to-respawn 0
+  ask civilians
+  [ if current-place-number >= length shortest-path-to-exit
+    [ set civilians-to-respawn civilians-to-respawn + 1
+      die
+    ]
+  ]
+  spawn-numberOfCivilians-shortest-path civilians-to-respawn
+end
+
 to setup
     clear-all
     set robbed 0
@@ -358,7 +392,7 @@ to setup
     spawn-numberOfThieves-matrix
     spawn-numberOfPolice-matrix
 ;    spawn-numberOfCivilians-matrix
-    spawn-numberOfCivilians-shortest-path
+    spawn-numberOfCivilians-shortest-path numberOfCivilians
     reset-ticks
 end
 
@@ -449,7 +483,8 @@ to go
   move-police-random-matrix
   move-thieves-random-matrix
   ; move-civilians-random-matrix
-  move-civilians-shortest-path
+  move-civilians-shortest-path-with-flux
+  respawn-civilians
   try-robbery
   ; compute the rate of change of the number of robbed civilians after a defined number of ticks, given as a parameter
   if ticks - checkpoint-ticks  >= ticks-difference
@@ -474,8 +509,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 0
 150
