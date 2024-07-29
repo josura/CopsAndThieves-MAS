@@ -396,56 +396,6 @@ to setup
     reset-ticks
 end
 
-to go-old
-    ; reset the color of the patches
-    ask patches
-    [
-      if pcolor = red
-        [ set pcolor white ]
-    ]
-    ; reset the thieves state
-    clear-thieves
-    ; compute the cone of vision for the police, if a wall is present, the police agent changes its cone of vision range to the distance between the agent and the wall
-    ask police
-    [ let police-xcor xcor
-      let police-ycor ycor
-      let final-cone-of-vision-range coneOfVisionRange
-      ask patches in-cone coneOfVisionRange coneOfVisionAngle
-      [ ;if pcolor = [0 0 0]
-        if matrix:get obstacles-matrix pycor pxcor = 0
-        [ let tmp-final-cone-of-vision-range distancexy police-xcor police-ycor
-          if tmp-final-cone-of-vision-range < final-cone-of-vision-range
-          [ set final-cone-of-vision-range tmp-final-cone-of-vision-range
-          ]
-        ]
-      ]
-      set current-cone-of-vision-range final-cone-of-vision-range
-    ]
-    ; show cone of vision for the police
-    ask police
-    [ ask patches in-cone current-cone-of-vision-range coneOfVisionAngle
-      [ if plabel-color = 9.9 and showConeOfVision
-        [set pcolor red ]
-        ; update state of thieves in cone of vision
-        ask thieves-here
-        [set in-cone-of-vision true
-        ]
-      ]
-    ]
-  ; move the agents
-  move-police-png
-  move-thieves-png
-  move-civilians-png
-  try-robbery
-  ; compute the rate of change of the number of robbed civilians after a defined number of ticks, given as a parameter
-  if ticks - checkpoint-ticks  >= ticks-difference
-  [
-    compute-robbed-rate
-  ]
-  reset-police-coneOfVision
-  tick
-end
-
 to go
     ; reset the color of the patches
     if showObstacles
