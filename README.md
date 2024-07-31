@@ -4,7 +4,7 @@ In these repository, we present a multi-agent simulation for computing the optim
 The agents are divided into three categories:
 - **Citizens**: they move from one entry point to one exit point, they chose the shortest path to reach their destination. They stay more time in the area if it is an area with an high flux/interest. They can be robbed more than once if they are in contact with a robber. Represented as an happy face.
 - **Robbers**: they move randomly in the area, they can rob citizens. A robber can rob a citizen only if it is not watched by a police officer. Represented as people figures.
-  **Police officers**: they move randomly in the area, they can watch citizens and robbers. They have a cone of vision with a specific angle and range. Represented as arrows.
+- **Police officers**: they move randomly in the area, they can watch citizens and robbers. They have a cone of vision with a specific angle and range. Represented as arrows.
 
 The simulation is based on the NetLogo platform. Testing data was taken from the city of Catania, Italy. The simulation is based on the following assumptions:
 - cone of vision range is shrinked to the lowest range that is not covered by a wall
