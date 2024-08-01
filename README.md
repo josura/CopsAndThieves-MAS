@@ -32,6 +32,8 @@ In the image above, there is the interface of the simulation. The numbers repres
 12. the plot of the number of citizens that are robbed through the simulation
 13. the plot of the ratio of robbed citizens through the simulation
 
+Ratio of robbed citizens doesn't work great, so it will probably be removed in the future.
+
 Some examples of the simulation are shown below:
 ## setting up the environment, showing the area
 <p align="center"><img src="./docs/images/second_screen.png" alt="drawing" width="600"/></p>
