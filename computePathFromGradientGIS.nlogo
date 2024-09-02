@@ -573,9 +573,9 @@ SLIDER
 439
 coneOfVisionAngle
 coneOfVisionAngle
-0
-300
-158.0
+100
+220
+200.0
 1
 1
 NIL
