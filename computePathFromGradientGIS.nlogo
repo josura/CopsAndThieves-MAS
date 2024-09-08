@@ -431,6 +431,7 @@ to go
     ]
   ; move the agents
   move-police-random-matrix
+  ; move-police-fixed-looking-at-most-robbed-place-in-radius
   move-thieves-random-matrix
   ; move-civilians-random-matrix
   move-civilians-shortest-path-with-flux
