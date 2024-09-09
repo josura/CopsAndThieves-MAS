@@ -253,10 +253,10 @@ end
 
 to move-police-fixed-looking-at-most-robbed-place-in-radius
     ask police
-    [ let most-robbed-place min-one-of patches in-radius 10 with [matrix:get robbed-places-matrix pycor pxcor = 1] [matrix:get robbed-places-matrix pycor pxcor]
+    [ let most-robbed-place min-one-of patches in-radius coneOfVisionRange [matrix:get robbed-places-matrix pycor pxcor]
       if most-robbed-place != nobody
       [ face most-robbed-place
-        fd 1
+        ;fd 1
       ]
     ]
 end
@@ -345,7 +345,7 @@ to try-robbery
       [ set color blue]
       [set color yellow
         ask civilians-here
-          [ set robbed robbed + 1 
+          [ set robbed robbed + 1
             matrix:set robbed-places-matrix pycor pxcor matrix:get robbed-places-matrix pycor pxcor + 1
           ]
       ]
@@ -675,7 +675,7 @@ SWITCH
 127
 showObstacles
 showObstacles
-1
+0
 1
 -1000
 
