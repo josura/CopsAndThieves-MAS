@@ -11,7 +11,7 @@ police-own [current-cone-of-vision-range]
 
 civilians-own [start-exit-point end-exit-point shortest-path-to-exit current-place-number current-flux-waiting-time]
 
-globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap obstacles-matrix flux-matrix exit-points]
+globals [ robbed rate-of-change-robbed checkpoint-robbed checkpoint-ticks obstacles-bitmap flux-bitmap obstacles-matrix flux-matrix exit-points robbed-places-matrix]
 ; the number of agents is parametrized
 
 to load-png-image-to-obstacles-bitmap
@@ -251,6 +251,16 @@ to move-police-random-matrix
     ]
 end
 
+to move-police-fixed-looking-at-most-robbed-place-in-radius
+    ask police
+    [ let most-robbed-place min-one-of patches in-radius 10 with [matrix:get robbed-places-matrix pycor pxcor = 1] [matrix:get robbed-places-matrix pycor pxcor]
+      if most-robbed-place != nobody
+      [ face most-robbed-place
+        fd 1
+      ]
+    ]
+end
+
 to move-thieves-png
     ask thieves
     [ wiggle
@@ -335,7 +345,9 @@ to try-robbery
       [ set color blue]
       [set color yellow
         ask civilians-here
-          [ set robbed robbed + 1 ]
+          [ set robbed robbed + 1 
+            matrix:set robbed-places-matrix pycor pxcor matrix:get robbed-places-matrix pycor pxcor + 1
+          ]
       ]
 ;            [if any? neighbors with [pxcor = thief-xcor and pycor = thief-ycor]
 ;                [ set robbed robbed + 1]]
@@ -377,6 +389,7 @@ end
 to setup
     clear-all
     set robbed 0
+    set robbed-places-matrix matrix:make-constant world-width world-height 0
     ; load-png-image-to-patches
     load-png-image-to-obstacles-bitmap
     load-png-image-to-flux-bitmap
@@ -430,8 +443,13 @@ to go
       ]
     ]
   ; move the agents
-  move-police-random-matrix
-  ; move-police-fixed-looking-at-most-robbed-place-in-radius
+  ifelse police-behavior = "random"
+  [
+    move-police-random-matrix
+  ]
+  [
+    move-police-fixed-looking-at-most-robbed-place-in-radius
+  ]
   move-thieves-random-matrix
   ; move-civilians-random-matrix
   move-civilians-shortest-path-with-flux
@@ -660,6 +678,16 @@ showObstacles
 1
 1
 -1000
+
+CHOOSER
+59
+951
+197
+996
+police-behavior
+police-behavior
+"random" "fixed-looking"
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
