@@ -386,6 +386,57 @@ to respawn-civilians
   spawn-numberOfCivilians-shortest-path civilians-to-respawn
 end
 
+to save-into-file-robbed-patches
+  ask patches
+  [ if matrix:get robbed-places-matrix pycor pxcor > 0
+    [ file-open "robbed-patches.txt"
+      file-print (word pycor " " pxcor " " matrix:get robbed-places-matrix pycor pxcor)
+      file-close
+    ]
+  ]
+end
+
+to spawn-police-into-robbed-patches
+  let robbed-patches-list []
+  file-open "robbed-patches.txt"
+  while [not file-at-end?]
+  [ let temp-pycor file-read
+    let temp-pxcor file-read
+    let robbed-people file-read
+    set robbed-patches-list lput (list temp-pycor temp-pxcor robbed-people) robbed-patches-list
+  ]
+  file-close
+  show robbed-patches-list
+  ; foreach robbed-patches-list
+  ; [ let pycor item 0 ?
+  ;   let pxcor item 1 ?
+  ;   create-police
+  ; sorted list of lists by the third element
+  let sorted-list sort-by [[a b] -> item 2 a < item 2  b] robbed-patches-list
+  show sorted-list
+  foreach range numberOfPolice
+  [ ; take the first element of the sorted list, that is the most robbed place
+    let most-robbed-place first sorted-list
+    show most-robbed-place
+    let temp-pycor item 0 most-robbed-place
+    let temp-pxcor item 1 most-robbed-place
+    ; remove the most robbed place from the list
+    set sorted-list but-first sorted-list
+    create-police 1
+    [ setxy temp-pxcor temp-pycor
+      set color blue
+      set size 1
+      set shape "default"
+      set heading random 360
+    ]
+    ; control if the list is empty
+    if empty? sorted-list
+    [ stop ]
+  ]
+end
+
+
+
 to setup
     clear-all
     set robbed 0
@@ -403,7 +454,8 @@ to setup
 ; creating the agents
     init-exit-points
     spawn-numberOfThieves-matrix
-    spawn-numberOfPolice-matrix
+    ;spawn-numberOfPolice-matrix
+    spawn-police-into-robbed-patches
 ;    spawn-numberOfCivilians-matrix
     spawn-numberOfCivilians-shortest-path numberOfCivilians
     reset-ticks
@@ -687,13 +739,30 @@ showObstacles
 -1000
 
 CHOOSER
-59
-951
-197
-996
+14
+914
+152
+959
 police-behavior
 police-behavior
 "random" "fixed-looking"
+1
+
+BUTTON
+23
+976
+188
+1009
+save robbed patches
+save-into-file-robbed-patches
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
 @#$#@#$#@
