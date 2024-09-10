@@ -253,7 +253,7 @@ end
 
 to move-police-fixed-looking-at-most-robbed-place-in-radius
     ask police
-    [ let most-robbed-place min-one-of patches in-radius coneOfVisionRange [matrix:get robbed-places-matrix pycor pxcor]
+  [ let most-robbed-place min-one-of patches in-radius coneOfVisionRange [matrix:get robbed-places-matrix pycor pxcor]
       if most-robbed-place != nobody
       [ face most-robbed-place
         ;fd 1
@@ -462,6 +462,13 @@ to go
   ]
   reset-police-coneOfVision
   tick
+  ; save the number of robbed civilians, the ticks and the parameters of the model (police number, thieves number, civilians number, cone of vision range, cone of vision angle, police behavior) in a file
+  if ticks mod 100 = 0
+  [
+    file-open "robbed.tsv"
+    file-print (word robbed "\t" ticks "\t" numberOfPolice "\t" numberOfThieves "\t" numberOfCivilians "\t" coneOfVisionRange "\t" coneOfVisionAngle "\t" police-behavior)
+    file-close
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
