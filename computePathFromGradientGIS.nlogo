@@ -521,16 +521,20 @@ to go
     file-print (word robbed "\t" ticks "\t" numberOfPolice "\t" numberOfThieves "\t" numberOfCivilians "\t" coneOfVisionRange "\t" coneOfVisionAngle "\t" police-behavior)
     file-close
   ]
+  if robbed = 2000
+  [stop]
+  if ticks = 10000
+  [stop]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-230
-10
-1325
-1106
+374
+16
+1679
+1322
 -1
 -1
-7.2
+8.59
 1
 10
 1
@@ -576,7 +580,7 @@ numberOfPolice
 numberOfPolice
 0
 100
-9.0
+0.0
 1
 1
 NIL
@@ -591,7 +595,7 @@ numberOfThieves
 numberOfThieves
 0
 100
-20.0
+10.0
 1
 1
 NIL
@@ -606,7 +610,7 @@ numberOfCivilians
 numberOfCivilians
 0
 100
-50.0
+100.0
 1
 1
 NIL
@@ -734,7 +738,7 @@ SWITCH
 127
 showObstacles
 showObstacles
-0
+1
 1
 -1000
 
