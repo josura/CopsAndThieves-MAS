@@ -31,6 +31,8 @@ In the image above, there is the interface of the simulation. The numbers repres
 11. a counter to show the number of citizens that are robbed
 12. the plot of the number of citizens that are robbed through the simulation
 13. the plot of the ratio of robbed citizens through the simulation
+14. chooser to change the movement strategy for the police officers (random or in fixed points, looking at the most robbed place in the current iteration)
+15. button to save the current robbed patches with the count of robbed people for every patch
 
 Ratio of robbed citizens doesn't work great, so it will probably be removed in the future.
 
