@@ -151,3 +151,34 @@ aggregated_data_fixed_looking_behavior = fixed_looking_behavior_testdata.groupby
 
 
 # hypothesis testing on the number of robbed for random behavior and fixed-looking behavior, showing that the number of robbed is significantly different between the two behaviors
+# compute the difference of average number of robbed for each tick and nPolice
+average_robbed_random_behavior = random_behavior_testdata.groupby(['ticks', 'nPolice'])['robbed'].mean().reset_index()
+average_robbed_fixed_looking_behavior = fixed_looking_behavior_testdata.groupby(['ticks', 'nPolice'])['robbed'].mean().reset_index()
+# order the rows by ticks and nPolice
+average_robbed_random_behavior = average_robbed_random_behavior.sort_values(by=['ticks', 'nPolice'])
+average_robbed_fixed_looking_behavior = average_robbed_fixed_looking_behavior.sort_values(by=['ticks', 'nPolice'])
+# compute the difference of average number of robbed for each tick and nPolice
+difference = average_robbed_random_behavior['robbed'] - average_robbed_fixed_looking_behavior['robbed']
+# perform hypothesis testing
+from scipy.stats import ttest_ind
+t_stat, p_value = ttest_ind(average_robbed_random_behavior['robbed'], average_robbed_fixed_looking_behavior['robbed'])
+print('t-statistic:', t_stat)
+print('p-value:', p_value)
+
+# plotting the difference of average number of robbed for each tick and nPolice as line plots in 3d for every nPolice
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+police_unique = average_robbed_random_behavior['nPolice'].unique()
+
+for police in police_unique:
+    data_random = average_robbed_random_behavior[average_robbed_random_behavior['nPolice'] == police]
+    data_fixed_looking = average_robbed_fixed_looking_behavior[average_robbed_fixed_looking_behavior['nPolice'] == police]
+    difference = data_random['robbed'] - data_fixed_looking['robbed']
+    ax.plot(data_random['ticks'], difference, zs=police, zdir='y')
+
+ax.set_xlabel('ticks')
+ax.set_ylabel('nPolice')
+ax.set_zlabel('difference')
+ax.set_title('difference of average number of robbed (random behavior - fixed-looking behavior)')
+plt.show()
