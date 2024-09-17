@@ -45,3 +45,6 @@ Some examples of the simulation are shown below:
 
 ## running the simulation, with obstacles view and cone of vision
 <p align="center"><img src="./docs/images/screen_4th.png" alt="drawing" width="600"/></p>
+
+# Plotting
+some plots for the results can be obtained with the use of the python script `plottingResults.py`. The requirements libraries can be installed with the command `pip install -r requirements.txt`. 
